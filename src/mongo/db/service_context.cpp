@@ -247,6 +247,8 @@ ServiceContext::UniqueOperationContext ServiceContext::makeOperationContext(Clie
         _numCurrentOps.addAndFetch(1);
     }
 
+    // [bookmark] ServiceContext::makeOperationContext
+    // see StorageClientObserver, which creates RecoveryUnit for new operation context
     onCreate(opCtx.get(), _clientObservers);
     if (!opCtx->lockState()) {
         opCtx->setLockState(std::make_unique<LockerNoop>());

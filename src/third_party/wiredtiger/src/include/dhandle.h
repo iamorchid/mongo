@@ -106,9 +106,23 @@ struct __wt_data_handle {
 #define WT_DHANDLE_DISCARD 0x02u      /* Close on release */
 #define WT_DHANDLE_DISCARD_KILL 0x04u /* Mark dead on release */
 #define WT_DHANDLE_DROPPED 0x08u      /* Handle is dropped */
+
+// [bookmark] WT_DHANDLE_EXCLUSIVE
+// 独占访问handle，即获取handle的写锁。
 #define WT_DHANDLE_EXCLUSIVE 0x10u    /* Exclusive access */
+
 #define WT_DHANDLE_IS_METADATA 0x20u  /* Metadata handle */
+
+// [bookmark] WT_DHANDLE_LOCK_ONLY
+// 到底作为何种锁使用？读锁还是写锁？
+// 通过__wt_session_lock_dhandle的分析可以知道，使用WT_DHANDLE_LOCK_ONLY作为flags，既有可能获取
+// handle的读锁，也有可能获取handle的写锁，也可能返回EBUSY（取决于当前handle是否open已经其他线程已
+// 持有的handle锁）。但如果使用WT_DHANDLE_LOCK_ONLY|WT_DHANDLE_EXCLUSIVE，则获取的锁一定是handle
+// 的写锁，或者返回EBUSY。
+// 代码中WT_DHANDLE_LOCK_ONLY总是和WT_DHANDLE_EXCLUSIVE一起使用来调用__wt_session_get_dhandle，
+// WT_DHANDLE_LOCK_ONLY主要是用来说明不需要open handle（当然，handle被其他线程已经open也没有关系）。
 #define WT_DHANDLE_LOCK_ONLY 0x40u    /* Handle only used as a lock */
+
 #define WT_DHANDLE_OPEN 0x80u         /* Handle is open */
                                       /* AUTOMATIC FLAG VALUE GENERATION STOP */
     uint32_t flags;

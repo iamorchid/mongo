@@ -220,6 +220,10 @@ __txn_get_snapshot_int(WT_SESSION_IMPL *session, bool publish)
              */
             WT_READ_BARRIER();
             if (!s->is_allocating) {
+                // [bookmark] __txn_get_snapshot_int
+                // 为什么说"There is still a chance that fetched ID is not valid after ID allocation" ?
+                // 从__wt_txn_id_alloc看来，如果txn_shared->id不为WT_TXN_NONE且txn_shared->is_allocating为false
+                // 的话，应该可以决定txn_shared->id已经分配好了。
                 /*
                  * There is still a chance that fetched ID is not valid after ID allocation, so we
                  * check again here. The read of transaction ID should be carefully ordered: we want

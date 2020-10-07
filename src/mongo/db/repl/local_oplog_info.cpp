@@ -117,6 +117,12 @@ std::vector<OplogSlot> LocalOplogInfo::getNextOpTimes(OperationContext* opCtx, s
         }
     });
 
+    // [bookmark] Post-Begin-Monotonic-Allocation
+    // preallocateSnapshot对应的逻辑主要是开启事务。
+    // 下面的oplogDiskLocRegister会设置commit timestamp，这里的逻辑保证了事务提交时，它的commit timestamp
+    // 一定比尚未分配commit timestamp事务的commit timestamp小。这可以保证wiredtiger提供的all_durable不会
+    // 存在空洞(即all_durable不可能move back)。
+    // Allow the storage engine to start the transaction outside the critical section.
     // Allow the storage engine to start the transaction outside the critical section.
     opCtx->recoveryUnit()->preallocateSnapshot();
     {

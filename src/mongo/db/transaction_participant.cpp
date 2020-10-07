@@ -817,6 +817,12 @@ void TransactionParticipant::TxnResources::release(OperationContext* opCtx) {
     UncommittedCollections::get(opCtx).receiveResources(_uncommittedCollections);
     _uncommittedCollections = nullptr;
 
+    // [bookmark] TransactionParticipant::TxnResources::release
+    // opCtx->_ruState would be set to _ruState (which is kept in stashed TxnResources) in the following 
+    // WriteUnitOfWork::createForSnapshotResume call. However, it makes more sense if do this directly 
+    // in opCtx->setRecoveryUnit here.
+    // By resetting opCtx->_ruState to something that's not kNotInUnitOfWork, we can re-use the top-level 
+    // transaction (logic like "WriteUnitOfWork wuow(opCtx)" won't open new transaction.)
     auto oldState = opCtx->setRecoveryUnit(std::move(_recoveryUnit),
                                            WriteUnitOfWork::RecoveryUnitState::kNotInUnitOfWork);
     invariant(oldState == WriteUnitOfWork::RecoveryUnitState::kNotInUnitOfWork,

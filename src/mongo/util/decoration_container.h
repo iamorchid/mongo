@@ -111,6 +111,10 @@ public:
         Decorable<DecoratedType>** const backLink =
             reinterpret_cast<Decorable<DecoratedType>**>(_decorationData.get());
         *backLink = decorated;
+
+        // [bookmark] DecorationContainer
+        // registry contains static info of class Decorable (and each instance of Decorable has its
++       // own DecorationContainer). Here it's constructing decorations for Decorable instance.
         _registry->construct(this);
     }
 

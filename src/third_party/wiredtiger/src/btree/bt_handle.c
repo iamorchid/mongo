@@ -85,8 +85,7 @@ __wt_btree_open(WT_SESSION_IMPL *session, const char *op_cfg[])
     btree->dhandle = dhandle;
 
     /* Checkpoint and verify files are readonly. */
-    if (dhandle->checkpoint != NULL || F_ISSET(btree, WT_BTREE_VERIFY) ||
-      F_ISSET(S2C(session), WT_CONN_READONLY))
+    if (dhandle->checkpoint != NULL || F_ISSET(btree, WT_BTREE_VERIFY) || F_ISSET(S2C(session), WT_CONN_READONLY))
         F_SET(btree, WT_BTREE_READONLY);
 
     /* Get the checkpoint information for this name/checkpoint pair. */

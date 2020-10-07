@@ -88,16 +88,21 @@ retry:
  *     Return when the current data handle is either (a) open with the requested lock mode; or (b)
  *     closed and write locked. If exclusive access is requested and cannot be granted immediately
  *     because the handle is in use, fail with EBUSY. Here is a brief summary of how different
- *     operations synchronize using either the schema lock, handle locks or handle flags: open --
- *     one thread gets the handle exclusive, reverts to a shared handle lock once the handle is
- *     open; bulk load --
- *     sets bulk and exclusive; salvage, truncate, update, verify --
- *     hold the schema lock, get the handle exclusive, set a "special" flag; sweep --
- *     gets a write lock on the handle, doesn't set exclusive The principle is that some application
- *     operations can cause other application operations to fail (so attempting to open a cursor on
- *     a file while it is being bulk-loaded will fail), but internal or database-wide operations
- *     should not prevent application-initiated operations. For example, attempting to verify a file
- *     should not fail because the sweep server happens to be in the process of closing that file.
+ *     operations synchronize using either the schema lock, handle locks or handle flags: 
+ *     a) open 
+ *        one thread gets the handle exclusive, reverts to a shared handle lock once the handle is open
+ *     b) bulk load
+ *        sets bulk and exclusive; 
+ *     c) salvage, truncate, update, verify 
+ *        hold the schema lock, get the handle exclusive, set a "special" flag
+ *     d) sweep
+ *        gets a write lock on the handle, doesn't set exclusive
+ *     
+ *     The principle is that some application operations can cause other application operations to fail 
+ *     (so attempting to open a cursor on a file while it is being bulk-loaded will fail), but internal or 
+ *     database-wide operations should not prevent application-initiated operations. For example, attempting 
+ *     to verify a file should not fail because the sweep server happens to be in the process of closing 
+ *     that file.
  */
 int
 __wt_session_lock_dhandle(WT_SESSION_IMPL *session, uint32_t flags, bool *is_deadp)
@@ -190,6 +195,10 @@ __wt_session_lock_dhandle(WT_SESSION_IMPL *session, uint32_t flags, bool *is_dea
             /*
              * If it was opened while we waited, drop the write lock and get a read lock instead.
              */
+            // [bookmark] __wt_session_lock_dhandle
+            // 为何在获取写锁的情况下，handle还能已经处于open？难道存在操作在open一个handle后，不需要持有handle的读锁或写锁？
+            // 参见__wt_session_get_dhandle方法，handle在open后，如果不是exclusive访问，会先释放已持有的handle的写锁（但
+            // 此时schema lock已经获取），然后重新获取handle的读锁。
             if (F_ISSET(dhandle, WT_DHANDLE_OPEN) && !want_exclusive) {
                 lock_busy = false;
                 __wt_writeunlock(session, &dhandle->rwlock);
@@ -204,6 +213,13 @@ __wt_session_lock_dhandle(WT_SESSION_IMPL *session, uint32_t flags, bool *is_dea
             WT_ASSERT(session, !F_ISSET(dhandle, WT_DHANDLE_DEAD));
             return (0);
         }
+
+        // [bookmark] __wt_session_lock_dhandle
+        // 1. 如果ret不为EBUSY，则是非预期错误，直接返回该错误
+        // 2. 对于EBUSY（即无法获取write lock），则对以下两种情况不进行重试
+        //    a) handle已经open，且想exclusively使用该handle
+        //    b) handle被标记为当做同步锁使用
+        // 因此，想exclusively使用该handle时，如果无法获取写锁时（说明该handle正在被使用），直接返回EBUSY。
         if (ret != EBUSY || (is_open && want_exclusive) || LF_ISSET(WT_DHANDLE_LOCK_ONLY))
             return (ret);
         lock_busy = true;
@@ -500,15 +516,13 @@ __wt_session_get_dhandle(WT_SESSION_IMPL *session, const char *uri, const char *
             F_CLR(dhandle, WT_DHANDLE_EXCLUSIVE);
             __wt_writeunlock(session, &dhandle->rwlock);
 
-            WT_WITH_SCHEMA_LOCK(
-              session, ret = __wt_session_get_dhandle(session, uri, checkpoint, cfg, flags));
+            WT_WITH_SCHEMA_LOCK(session, ret = __wt_session_get_dhandle(session, uri, checkpoint, cfg, flags));
 
             return (ret);
         }
 
         /* Open the handle. */
-        if ((ret = __wt_conn_dhandle_open(session, cfg, flags)) == 0 &&
-          LF_ISSET(WT_DHANDLE_EXCLUSIVE))
+        if ((ret = __wt_conn_dhandle_open(session, cfg, flags)) == 0 && LF_ISSET(WT_DHANDLE_EXCLUSIVE))
             break;
 
         /*
@@ -519,12 +533,18 @@ __wt_session_get_dhandle(WT_SESSION_IMPL *session, const char *uri, const char *
         dhandle->excl_ref = 0;
         F_CLR(dhandle, WT_DHANDLE_EXCLUSIVE);
         __wt_writeunlock(session, &dhandle->rwlock);
+
+        // [bookmark] __wt_session_get_dhandle
+        // 到达这里(且ret == 0)时，handle已经处于open状态，且handle->rwlock已释放，但schema lock已经获取。
+        // 但这里有个问题，如果此时handle被其他线程获取了写锁，则当前线程会因为无法获取读锁而阻塞，且此时当前
+        // 线程是获取了schema lock自旋锁的。如果其他线程要获取schema lock，岂不是会造成死锁？？？
         WT_RET(ret);
     }
 
     WT_ASSERT(session, !F_ISSET(dhandle, WT_DHANDLE_DEAD));
     WT_ASSERT(session, LF_ISSET(WT_DHANDLE_LOCK_ONLY) || F_ISSET(dhandle, WT_DHANDLE_OPEN));
 
+    // LF_ISSET(WT_DHANDLE_EXCLUSIVE) == F_ISSET(dhandle, WT_DHANDLE_EXCLUSIVE)难道不总是为true？
     WT_ASSERT(session,
       LF_ISSET(WT_DHANDLE_EXCLUSIVE) == F_ISSET(dhandle, WT_DHANDLE_EXCLUSIVE) ||
         dhandle->excl_ref > 1);

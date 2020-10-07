@@ -172,6 +172,9 @@ __txn_global_query_timestamp(WT_SESSION_IMPL *session, wt_timestamp_t *tsp, cons
     WT_STAT_CONN_INCR(session, txn_query_ts);
     WT_RET(__wt_config_gets(session, cfg, "get", &cval));
     if (WT_STRING_MATCH("all_durable", cval.str, cval.len)) {
+        // [bookmark] __txn_global_query_timestamp
+        // 在事务提交的时候会对txn_global->has_durable_timestamp和txn_global->durable_timestamp
+        // 更新，可以参见__wt_txn_commit函数。
         if (!txn_global->has_durable_timestamp)
             return (WT_NOTFOUND);
         ts = txn_global->durable_timestamp;
