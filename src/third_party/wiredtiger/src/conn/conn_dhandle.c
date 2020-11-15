@@ -423,7 +423,7 @@ __wt_conn_dhandle_open(WT_SESSION_IMPL *session, const char *cfg[], uint32_t fla
     dhandle = session->dhandle;
     btree = dhandle->handle;
 
-    // [bookmark] __wt_conn_dhandle_open
+    // [comment] __wt_conn_dhandle_open
     // 打开handle必须获取独占访问，同时不能设置将handle作为锁使用（若作为锁使用，则不需要调用这里的open方法）
     WT_ASSERT(session, F_ISSET(dhandle, WT_DHANDLE_EXCLUSIVE) && !LF_ISSET(WT_DHANDLE_LOCK_ONLY));
 

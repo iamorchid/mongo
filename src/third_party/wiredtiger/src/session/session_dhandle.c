@@ -195,7 +195,7 @@ __wt_session_lock_dhandle(WT_SESSION_IMPL *session, uint32_t flags, bool *is_dea
             /*
              * If it was opened while we waited, drop the write lock and get a read lock instead.
              */
-            // [bookmark] __wt_session_lock_dhandle
+            // [comment] __wt_session_lock_dhandle
             // 为何在获取写锁的情况下，handle还能已经处于open？难道存在操作在open一个handle后，不需要持有handle的读锁或写锁？
             // 参见__wt_session_get_dhandle方法，handle在open后，如果不是exclusive访问，会先释放已持有的handle的写锁（但
             // 此时schema lock已经获取），然后重新获取handle的读锁。
@@ -214,7 +214,7 @@ __wt_session_lock_dhandle(WT_SESSION_IMPL *session, uint32_t flags, bool *is_dea
             return (0);
         }
 
-        // [bookmark] __wt_session_lock_dhandle
+        // [comment] __wt_session_lock_dhandle
         // 1. 如果ret不为EBUSY，则是非预期错误，直接返回该错误
         // 2. 对于EBUSY（即无法获取write lock），则对以下两种情况不进行重试
         //    a) handle已经open，且想exclusively使用该handle
@@ -534,7 +534,7 @@ __wt_session_get_dhandle(WT_SESSION_IMPL *session, const char *uri, const char *
         F_CLR(dhandle, WT_DHANDLE_EXCLUSIVE);
         __wt_writeunlock(session, &dhandle->rwlock);
 
-        // [bookmark] __wt_session_get_dhandle
+        // [comment] __wt_session_get_dhandle
         // 到达这里(且ret == 0)时，handle已经处于open状态，且handle->rwlock已释放，但schema lock已经获取。
         // 但这里有个问题，如果此时handle被其他线程获取了写锁，则当前线程会因为无法获取读锁而阻塞，且此时当前
         // 线程是获取了schema lock自旋锁的。如果其他线程要获取schema lock，岂不是会造成死锁？？？

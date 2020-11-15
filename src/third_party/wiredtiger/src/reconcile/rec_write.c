@@ -1086,9 +1086,12 @@ __rec_split_row_promote(WT_SESSION_IMPL *session, WT_RECONCILE *r, WT_ITEM *key,
      * larger byte value in the current key, or the current key will be a longer key, and the
      * interesting byte is one past the length of the shorter key.
      */
+    // [coment] __rec_split_row_promote
+    // 这里只要求要设置的key比上一个block的最大值大即可，但并不需要和当前key的内容一样。
     pa = max->data;
     pb = r->cur->data;
     len = WT_MIN(max->size, r->cur->size);
+	
     size = len + 1;
     for (cnt = 1; len > 0; ++cnt, --len, ++pa, ++pb)
         if (*pa != *pb) {

@@ -247,7 +247,7 @@ ServiceContext::UniqueOperationContext ServiceContext::makeOperationContext(Clie
         _numCurrentOps.addAndFetch(1);
     }
 
-    // [bookmark] ServiceContext::makeOperationContext
+    // [comment] ServiceContext::makeOperationContext
     // see StorageClientObserver, which creates RecoveryUnit for new operation context
     onCreate(opCtx.get(), _clientObservers);
     if (!opCtx->lockState()) {

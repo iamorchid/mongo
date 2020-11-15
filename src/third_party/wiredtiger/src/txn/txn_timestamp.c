@@ -172,7 +172,7 @@ __txn_global_query_timestamp(WT_SESSION_IMPL *session, wt_timestamp_t *tsp, cons
     WT_STAT_CONN_INCR(session, txn_query_ts);
     WT_RET(__wt_config_gets(session, cfg, "get", &cval));
     if (WT_STRING_MATCH("all_durable", cval.str, cval.len)) {
-        // [bookmark] __txn_global_query_timestamp
+        // [comment] __txn_global_query_timestamp
         // 在事务提交的时候会对txn_global->has_durable_timestamp和txn_global->durable_timestamp
         // 更新，可以参见__wt_txn_commit函数。
         if (!txn_global->has_durable_timestamp)
@@ -866,8 +866,11 @@ __wt_txn_set_read_timestamp(WT_SESSION_IMPL *session, wt_timestamp_t read_ts)
      * If we already have a snapshot, it may be too early to match the timestamp (including the one
      * we just read, if rounding to oldest). Get a new one.
      */
-    if (F_ISSET(txn, WT_TXN_RUNNING))
+    if (F_ISSET(txn, WT_TXN_RUNNING)) {
+        // [question] __wt_txn_set_read_timestamp
+        // 如果之前这个正在运行的事务已经有更新操作，切换snapshot岂不是容易出问题？
         __wt_txn_get_snapshot(session);
+    }
 
     return (0);
 }

@@ -216,6 +216,9 @@ __rec_need_save_upd(
     if (F_ISSET(r, WT_REC_CHECKPOINT) && upd_select->upd == NULL)
         return (false);
 
+    // [comment] __rec_need_save_upd
+    // 如果update chain中，不是所有update都是全部可见的话，那么reconcile时update chain需要保留在内存中。
+    // 下面的逻辑关系为何是AND而不是OR ?
     return (!__wt_txn_tw_stop_visible_all(session, &upd_select->tw) &&
       !__wt_txn_tw_start_visible_all(session, &upd_select->tw));
 }

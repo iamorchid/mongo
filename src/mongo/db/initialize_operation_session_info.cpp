@@ -38,7 +38,8 @@
 
 namespace mongo {
 
-// [bookmark]: initialize operation context session info
+// [comment]: initializeOperationSessionInfo
+// initialize operation context session info
 OperationSessionInfoFromClient initializeOperationSessionInfo(OperationContext* opCtx,
                                                               const BSONObj& requestBody,
                                                               bool requiresAuth,

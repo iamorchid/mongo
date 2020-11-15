@@ -1491,7 +1491,7 @@ Status WiredTigerRecordStore::_insertRecords(OperationContext* opCtx,
         }
         if (!ts.isNull()) {
             LOGV2_DEBUG(22403, 4, "inserting record with timestamp {ts}", "ts"_attr = ts);
-            // [bookmark] WiredTigerRecordStore::_insertRecords
+            // [comment] WiredTigerRecordStore::_insertRecords
             // open wiredtiger transaction(if it's not open) and call wiredtiger's timestamp_transaction
             fassert(39001, opCtx->recoveryUnit()->setTimestamp(ts));
         }

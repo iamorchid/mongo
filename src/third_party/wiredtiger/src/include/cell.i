@@ -45,6 +45,8 @@ __cell_pack_value_validity(WT_SESSION_IMPL *session, uint8_t **pp, WT_TIME_WINDO
 
     WT_IGNORE_RET(__cell_check_value_validity(session, tw, false));
 
+    // [comment] __cell_pack_value_validity
+    // 在pack value时，是不需要考虑prefix的（对照_wt_cell结构）
     **pp |= WT_CELL_SECOND_DESC;
     ++*pp;
     flagsp = *pp;

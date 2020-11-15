@@ -220,7 +220,7 @@ __txn_get_snapshot_int(WT_SESSION_IMPL *session, bool publish)
              */
             WT_READ_BARRIER();
             if (!s->is_allocating) {
-                // [bookmark] __txn_get_snapshot_int
+                // [comment] __txn_get_snapshot_int
                 // 为什么说"There is still a chance that fetched ID is not valid after ID allocation" ?
                 // 从__wt_txn_id_alloc看来，如果txn_shared->id不为WT_TXN_NONE且txn_shared->is_allocating为false
                 // 的话，应该可以决定txn_shared->id已经分配好了。
@@ -344,6 +344,12 @@ __txn_oldest_scan(WT_SESSION_IMPL *session, uint64_t *oldest_idp, uint64_t *last
         }
     }
 
+    // [question] __txn_oldest_scan
+    // 这种情况可能发生吗？除非running的事务没有设置pinned_id (见__wt_txn_begin)， 或者设置
+    // 的pinned_id大于事务本身的id，但这种情况也不太可能，因为事务是先__txn_get_snapshot_int
+    // 并设置pinned_id, 然后再__wt_txn_id_alloc（即有更新操作时）分配事务id，这可以保证事务本
+    // 身的id一定大于或者等于pinned_id。
+    // 毫无以为，进行下面的操作肯定是更安全的。
     if (WT_TXNID_LT(last_running, oldest_id))
         oldest_id = last_running;
 

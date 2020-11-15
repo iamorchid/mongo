@@ -124,6 +124,8 @@
  * and the resulting bug is a mother to find -- make sure we get it right, don't make the caller
  * remember to put the & operator on the pointer.
  */
+ // [comment] __wt_free
+ // This macro would set p to null
 #define __wt_free(session, p)            \
     do {                                 \
         void *__p = &(p);                \

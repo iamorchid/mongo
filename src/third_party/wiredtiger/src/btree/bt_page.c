@@ -229,6 +229,10 @@ __wt_page_inmem(
         switch (page->type) {
         case WT_PAGE_COL_INT:
         case WT_PAGE_ROW_INT:
+			// [question] __wt_page_inmem
+            // 应理解为parent page维护的WT_REF index中，用于引用当前child page的WT_REF。
+            // 这里的parent_ref并非指对应parent page的WT_REF，即parent_ref->page不是
+            // parent page，而是当前页。
             page->pg_intl_parent_ref = ref;
             break;
         }

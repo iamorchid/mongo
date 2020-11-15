@@ -297,6 +297,8 @@ __wt_update_obsolete_check(
         ++upd_seen;
         if (__wt_txn_upd_visible_all(session, upd)) {
             if (first == NULL && WT_UPDATE_DATA_VALUE(upd))
+                // [question] __wt_update_obsolete_check
+                // 为何不在此时跳出for循环，而要继续扫面？按理说，upd后面的updates不会再被访问了。
                 first = upd;
         } else {
             first = NULL;

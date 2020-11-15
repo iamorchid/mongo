@@ -1139,9 +1139,10 @@ __wt_row_leaf_value_cell(WT_SESSION_IMPL *session, WT_PAGE *page, WT_ROW *rip,
          * instantiated key or on-page cell, both of which require an unpack of the key's cell to
          * find the value cell that follows.
          */
-        if (__wt_row_leaf_key_info(page, copy, NULL, &kcell, &key, &size) && kcell == NULL)
+        if (__wt_row_leaf_key_info(page, copy, NULL, &kcell, &key, &size) && kcell == NULL) {
+			// This indicates that rip corresponds to a simple key
             vcell = (WT_CELL *)((uint8_t *)key + size);
-        else {
+        } else {
             __wt_cell_unpack_kv(session, page->dsk, kcell, &unpack);
             vcell = (WT_CELL *)((uint8_t *)unpack.cell + __wt_cell_total_len(&unpack));
         }

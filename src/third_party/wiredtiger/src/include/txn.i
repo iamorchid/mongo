@@ -1337,6 +1337,9 @@ __wt_txn_cursor_op(WT_SESSION_IMPL *session)
      * positioned on a value, it can't be freed.
      */
     if (txn->isolation == WT_ISO_READ_UNCOMMITTED) {
+        // [question] __wt_txn_cursor_op
+        // 通过__txn_visible_id知道，READ_UNCOMMITTED隔离总是能看到其他事务变更的，那么
+        // "prevent any update that we are reading from being freed"有何意义？
         if (txn_shared->pinned_id == WT_TXN_NONE)
             txn_shared->pinned_id = txn_global->last_running;
         if (txn_shared->metadata_pinned == WT_TXN_NONE)

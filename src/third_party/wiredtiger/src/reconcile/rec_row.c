@@ -648,6 +648,11 @@ __rec_row_leaf_insert(WT_SESSION_IMPL *session, WT_RECONCILE *r, WT_INSERT *ins)
         /* Copy the key/value pair onto the page. */
         __wt_rec_image_copy(session, r, key);
         if (val->len == 0 && __rec_row_zero_len(session, &tw))
+			// [question] __rec_row_leaf_insert
+			// If we skip the writing of the cell for value here, how do we know if a key has 
+			// an empty value cell when performing unpacking ???
+			// See __wt_row_leaf_value_cell. When we try unpacking a value cell given a pointer, 
+			// if the pointer points to a key cell, we know the value should be empty.
             r->any_empty_value = true;
         else {
             r->all_empty_value = false;
@@ -770,6 +775,8 @@ __wt_rec_row_leaf(
          * Figure out the key: set any cell reference (and unpack it), set any instantiated key
          * reference.
          */
+        // [comment] __wt_rec_row_leaf
+        // we can also refer to __inmem_row_leaf about how rip is initialized
         copy = WT_ROW_KEY_COPY(rip);
         WT_IGNORE_RET_BOOL(__wt_row_leaf_key_info(page, copy, &ikey, &cell, NULL, NULL));
         if (cell == NULL)

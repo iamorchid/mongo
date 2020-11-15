@@ -817,7 +817,7 @@ void TransactionParticipant::TxnResources::release(OperationContext* opCtx) {
     UncommittedCollections::get(opCtx).receiveResources(_uncommittedCollections);
     _uncommittedCollections = nullptr;
 
-    // [bookmark] TransactionParticipant::TxnResources::release
+    // [comment] TransactionParticipant::TxnResources::release
     // opCtx->_ruState would be set to _ruState (which is kept in stashed TxnResources) in the following 
     // WriteUnitOfWork::createForSnapshotResume call. However, it makes more sense if do this directly 
     // in opCtx->setRecoveryUnit here.
